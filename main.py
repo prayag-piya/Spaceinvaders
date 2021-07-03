@@ -1,4 +1,4 @@
-import pygame, random, math
+import pygame, random, math, time
 
 SIZE = (1000, 600)
 
@@ -32,25 +32,27 @@ rockx = []
 rocky = []
 rmovex = []
 rmovey = []
+rockRect = []
 for i in range(8):
     x = random.randint(64, 100)
     img = pygame.image.load('rock.png')
     img = pygame.transform.scale(img, (x, x))
     rock.append(img)
-    rockx.append(random.randrange(-10, 936))
-    rocky.append(random.randrange(0 ,40))
+    rx = random.randrange(-10, 936)
+    ry = random.randrange(0 ,40)
+    rockx.append(rx)
+    rocky.append(ry)
     rmovex.append(random.randrange(-3, 3) + 1)
     rmovey.append(random.randrange(0, 3) + 1)
+    rockRect.append(pygame.Rect(rx, ry, x, x))
 
 fired_bullet = []
-bullet = pygame.image.load('bullet.png')
-bulletx = 0
-bullety = 0
+bulletx = []
+bullety = []
+# bulletRect = []
 bmovex = 0
 bmovey = 10
-newbullety = 0
-newbulletx = 0
-second_fire = False
+# bullet = pygame.image.load('bullet.png')
 bullet_state = "ready"
 
 score = 0
@@ -58,11 +60,14 @@ score = 0
 def enemyImg(x, y):
     win.blit(enemy, (x, y))
 
-def newBullet(x, y):
-    win.blit(bullet, (x, y))
-
 def playerImg(x, y):
     win.blit(player, (x, y))
+
+def get_bullet_rect():
+    bulletRect = []
+    for i in range(len(fired_bullet)):
+        bulletRect.append(pygame.Rect(bulletx[i], bullety[i], 32, 32))
+    return bulletRect
 
 def get_player_rect():
     return pygame.Rect(playerx, playery, 64, 64)
@@ -70,12 +75,11 @@ def get_player_rect():
 def get_enemy_rect():
     return pygame.Rect(enemyx, enemyY, 64, 64)
 
+
 def rockImg(x, y, i):
     win.blit(rock[i], (x, y))
 
-def fire_bullet(x, y):
-    global bullet_state
-    bullet_state = "fire"
+def fire_bullet(bullet, x, y):
     win.blit(bullet, (x+16, y-32))
 
 def isCollision(enemyx, enemyY, bulletx, bullety):
@@ -109,16 +113,11 @@ while running:
             if event.key == pygame.K_DOWN:
                 movey = 5
             if event.key == pygame.K_SPACE:
-                if bullet_state == "ready":
-                    bulletx = playerx
-                    bullety= playery
-                    bullet_state = "fire"
-                else:
-                    if bullety < 200:
-                        newbulletx = playerx
-                        newbullety = playery
-                        second_fire = True
-                        #adding new feature in another branch 
+                fired_bullet.append(pygame.image.load('bullet.png'))
+                bullety.append(playery)
+                bulletx.append(playerx)
+                # bulletRect.append(pygame.Rect(playerx, playery, 32, 32))
+                #adding new feature in another branch 
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT or event.key == pygame.K_UP or event.key == pygame.K_DOWN:
                 movex = 0
@@ -153,23 +152,31 @@ while running:
         enemyx = random.randint(0, 963)
         enemyY = random.randint(20, 40) * -1
 
-    collision = isCollision(enemyx, enemyY, bulletx, bullety)
-    forsecond = isCollision(enemyx, enemyY, newbulletx, newbullety)
+    
+    if len(fired_bullet) > 0:
+        if bullety[0] <= 0:
+            bullety.pop(0)
+            bulletx.pop(0)
+            fired_bullet.pop(0)
 
-    if collision:
-        bullety = playery
-        bullet_state = "ready"
-        score += 1
-        enemyx = random.randint(0, 936)
-        enemyY = random.randint(5, 10) * -1
-        print(score)
-    elif forsecond:
-        newbullety = playery
-        second_fire = False
-        score += 1
-        enemyx = random.randint(0, 936)
-        enemyY = random.randint(5, 10) * -1
-        print(score)
+    index = len(fired_bullet)
+    # print(index)
+
+    for i in range(index):
+
+        fire_bullet(fired_bullet[i], bulletx[i], bullety[i])
+        bullety[i] -= bmovey
+
+        # print(get_bullet_rect())
+
+        collision = isCollision(enemyx, enemyY, bulletx[i], bullety[i])
+
+        if collision:
+            bullety[i] = playery
+            score += 1
+            enemyx = random.randint(0, 936)
+            enemyY = random.randint(5, 10) * -1
+            print(score) 
 
     enemyImg(enemyx, enemyY)
 
@@ -180,26 +187,11 @@ while running:
         health -= 10
         enemyx = random.randint(0 , 963)
         enemyY = random.randint(0, 10) * -1
+                
 
     if health == 0:
         print("Game Over")
-        running = False
-
-    if bullety < 0:
-        bullety = playery
-        bullet_state = "ready"
-
-    if newbullety < 0:
-        newbullety = playery
-        second_fire = False
-
-    if bullet_state == "fire":
-        fire_bullet(bulletx, bullety)
-        bullety -= bmovey
-
-    if second_fire:
-        newBullet(newbulletx, newbullety)
-        newbullety -= bmovey
+        running = False 
 
     
     pygame.display.update()
