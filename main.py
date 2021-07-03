@@ -1,5 +1,5 @@
 import pygame, random, math, time
-
+from pygame import mixer
 SIZE = (1000, 600)
 
 pygame.init()
@@ -55,7 +55,26 @@ bmovey = 10
 # bullet = pygame.image.load('bullet.png')
 bullet_state = "ready"
 
+# Sorce 
 score = 0
+font = pygame.font.Font('freesansbold.ttf', 32)
+textX = 10
+textY = 10
+
+# Game Over 
+game_over = False
+over = pygame.font.Font('freesansbold.ttf', 42)
+que = pygame.font.Font('freesansbold.ttf', 32)
+
+def show_score(x, y):
+    score_value = font.render("Score : " + str(score), True, (255,255,255))
+    win.blit(score_value, (x, y))
+
+def gameover():
+    game_over_text = over.render("Game Over wanna play again", True, (255, 255, 255))
+    question = que.render("Y               N", True, (255, 255, 255))
+    win.blit(game_over_text, (90, 200))
+    win.blit(question, (90, 300))
 
 def enemyImg(x, y):
     win.blit(enemy, (x, y))
@@ -113,11 +132,35 @@ while running:
             if event.key == pygame.K_DOWN:
                 movey = 5
             if event.key == pygame.K_SPACE:
+                bullet_sound = mixer.Sound('img_laser.wav')
+                bullet_sound.play()
                 fired_bullet.append(pygame.image.load('bullet.png'))
                 bullety.append(playery)
                 bulletx.append(playerx)
                 # bulletRect.append(pygame.Rect(playerx, playery, 32, 32))
                 #adding new feature in another branch 
+            if event.key == pygame.K_y:
+                if game_over:
+                    game_over = False
+                    score = 0
+                    fired_bullet = []
+                    bulletx = []
+                    bullety = []
+                    bmovex = 0
+                    bmovey = 10
+                    playerx = 370
+                    playery = 500
+                    health = 20
+                    movex = 0
+                    movey = 0
+
+                    enemyx = random.randint(0, 936)
+                    enemyY = random.randint(20, 40) * -1
+                    emovex = 3
+                    emovey = 3
+            if event.key == pygame.K_n:
+                if game_over:
+                    running = False
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT or event.key == pygame.K_UP or event.key == pygame.K_DOWN:
                 movex = 0
@@ -172,26 +215,41 @@ while running:
         collision = isCollision(enemyx, enemyY, bulletx[i], bullety[i])
 
         if collision:
+            ex_sound = mixer.Sound('img_explosion.wav')
+            ex_sound.play()
             bullety[i] = playery
             score += 1
             enemyx = random.randint(0, 936)
             enemyY = random.randint(5, 10) * -1
-            print(score) 
 
     enemyImg(enemyx, enemyY)
+    show_score(textX, textY)
 
     enemyRect = get_enemy_rect()
     playerRect = get_player_rect()
 
     if enemyRect.colliderect(playerRect):
+        enemy_sound = mixer.Sound('img_explosion.wav')
+        enemy_sound.play()
         health -= 10
         enemyx = random.randint(0 , 963)
         enemyY = random.randint(0, 10) * -1
                 
 
     if health == 0:
-        print("Game Over")
-        running = False 
+        #print("Game Over")
+        game_over = True
+        # running = False 
+
+    if game_over:
+        bmovey = 0
+        emovey = 0 
+        emovex = 0
+        movex = 0
+        movey = 0
+        gameover()
+
+    
 
     
     pygame.display.update()
