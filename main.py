@@ -118,6 +118,7 @@ while running:
                         newbulletx = playerx
                         newbullety = playery
                         second_fire = True
+                        #adding new feature in another branch 
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT or event.key == pygame.K_UP or event.key == pygame.K_DOWN:
                 movex = 0
